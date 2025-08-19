@@ -4,35 +4,30 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import os
 import re
+import certifi
 
 # KAIST 메뉴 페이지 URL
 URL = "https://www.kaist.ac.kr/kr/html/campus/053001.html?dvs_cd=emp"
 
-def get_today_menu(url):
-    resp = requests.get(url)
+def get_menu_lists(url):
+    resp = requests.get(url, verify=certifi.where())
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, 'html.parser')
+    menus = soup.select("ul.list-1st")  # 점심, 저녁 메뉴 모두 선택
+    if len(menus) < 2:
+        raise ValueError("점심/저녁 메뉴를 찾을 수 없습니다.")
+    return menus
 
-    # 메뉴 텍스트 추출 (페이지 구조에 맞게 선택자)
-    menu_section = soup.select("ul.list-1st")
-    if menu_section:
-        lunch_menu = menu_section[0]
-        dinner_menu = menu_section[1] if len(menu_section) > 1 else None
-        return lunch_menu.get_text("\n", strip=True), dinner_menu.get_text("\n", strip=True) if dinner_menu else None
-    else:
-        return None,None
-
-def split_floors(menu_text):
-    parts = menu_text.split("2층 ")
-    first_floor = parts[0].replace("오늘의 메뉴: ", "").strip()
-    second_floor = "2층 " + parts[1].strip()
-    return first_floor, second_floor
+def extract_menu_text(ul_element):
+    items = ul_element.find_all("li")
+    text = "\n".join([item.get_text(strip=True) for item in items])
+    return text
 
 def remove_trailing_numbers(text):
     lines = text.splitlines()
     clean_lines = []
     for line in lines:
-        # 끝에 있는 숫자 괄호만 제거, 단어 포함 괄호는 유지
+        # 메뉴 끝에 있는 숫자 괄호만 제거, 단어 포함 괄호는 유지
         clean_line = re.sub(r'\((\d+,?)+\)$', '', line).strip()
         clean_lines.append(clean_line)
     return "\n".join(clean_lines)
@@ -47,19 +42,28 @@ def send_slack_message(token, channel, message):
     except SlackApiError as e:
         print("Error sending message:", e.response["error"])
         raise
+
 def main():
-    menu_text,dinner_text = get_today_menu(URL)
-    first_floor, second_floor = split_floors(menu_text)
-    first_floor_clean = remove_trailing_numbers(first_floor)
-    second_floor_clean = remove_trailing_numbers(second_floor)
-    if dinner_text:
-        dinner_text = remove_trailing_numbers(dinner_text)
-    else:
-        dinner_text = "저녁 메뉴는 제공되지 않습니다."
-    message = f"*오늘의 KAIST 메뉴*\n{first_floor_clean}\n\n\n{second_floor_clean}"
+    slack_token = os.getenv("SLACK_BOT_TOKEN")
+    channel_id = "@your_slack_username"  # 본인 Slack ID
+
+    menus = get_menu_lists(URL)
     
-    slack_token = os.getenv("xoxb-5926746863873-9360352196599-mxh5iIheZkNGFAqTfyerhRvi")
-    channel_id = "D06MM0RUE85"  # 본인 Slack ID
+    # 점심 메뉴
+    lunch_raw = extract_menu_text(menus[0])
+    lunch_clean = remove_trailing_numbers(lunch_raw)
+    
+    # 저녁 메뉴
+    dinner_raw = extract_menu_text(menus[1])
+    dinner_clean = remove_trailing_numbers(dinner_raw)
+
+    # Slack 메시지 포맷
+    message = (
+        "*오늘의 KAIST 메뉴*\n\n"
+        "*점심 (1층/2층):*\n" + lunch_clean + "\n\n"
+        "*저녁 (1층/2층):*\n" + dinner_clean
+    )
+
     send_slack_message(slack_token, channel_id, message)
 
 if __name__ == "__main__":
