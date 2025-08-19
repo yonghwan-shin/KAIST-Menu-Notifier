@@ -65,8 +65,9 @@ def main():
         "*점심 (1층/2층):*\n" + lunch_clean + "\n\n"
         "*저녁 (1층/2층):*\n" + dinner_clean
     )
+    print(message)
 
-    send_slack_message(slack_token, slack_user_id, message)
+    # send_slack_message(slack_token, slack_user_id, message)
 
 if __name__ == "__main__":
     main()
