@@ -45,7 +45,7 @@ def send_slack_message(token, channel, message):
 
 def main():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
-    channel_id = "@YongHwan"  # 본인 Slack ID
+    channel_id = "D06MM0RUE85"  # 본인 Slack ID
 
     menus = get_menu_lists(URL)
     
