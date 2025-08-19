@@ -42,9 +42,7 @@ def main():
     dinner_text_clean = remove_trailing_numbers(dinner_text)
     first_lines = [line.strip() for line in first_floor_clean.splitlines() if line.strip()]
     second_lines = [line.strip() for line in second_floor_clean.splitlines() if line.strip()]
-    print(first_lines)
-    
-
+  
     common = set(first_lines) & set(second_lines)
     second_final = []
     for i,item in enumerate(second_lines):
