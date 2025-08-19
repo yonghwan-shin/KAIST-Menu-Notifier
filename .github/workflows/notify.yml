@@ -1,34 +1,30 @@
-name: KAIST Menu Notifier
+name: Send KAIST Menu Email
 
-# 매일 오전 8시에 실행
 on:
   schedule:
-    - cron: '0 8 * * *'
-  workflow_dispatch: 
+    - cron: '0 0 * * *'   # 매일 UTC 자정 (한국은 오전 9시)
+  workflow_dispatch:
+
 jobs:
-  notify:
+  send-email:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. 저장소 체크아웃
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # 2. Python 설치
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-
-      # 3. 의존성 설치
-      - name: Install dependencies
+      - name: Run Python script to fetch menu
         run: |
-          python -m pip install --upgrade pip
-          pip install slack_sdk requests beautifulsoup4 certifi
+          python main.py > menu.txt
 
-      # 4. Slack 알림용 스크립트 실행
-      - name: Run KAIST Menu Notifier
-        run: python main.py
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_USER_ID: ${{ secrets.SLACK_USER_ID }}
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Today's KAIST Menu"
+          to: "scacung@gmail.com"
+          from: "KAIST Menu Bot <${{ secrets.MAIL_USERNAME }}>"
+          body: file://menu.txt
+          secure: true
