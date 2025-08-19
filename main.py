@@ -27,17 +27,16 @@ def remove_trailing_numbers(text):
     lines = text.splitlines()
     clean_lines = []
     for line in lines:
-        # 메뉴 끝에 있는 숫자 괄호만 제거, 단어 포함 괄호는 유지
         clean_line = re.sub(r'\((\d+,?)+\)$', '', line).strip()
         clean_lines.append(clean_line)
     return "\n".join(clean_lines)
 
-def send_slack_message(token, channel, message):
+def send_slack_message(token, user_id, message):
     if not token:
         raise ValueError("Slack token is not set. Please export SLACK_BOT_TOKEN.")
     client = WebClient(token=token)
     try:
-        response = client.chat_postMessage(channel=channel, text=message)
+        response = client.chat_postMessage(channel=user_id, text=message)
         print("Message sent:", response["ts"])
     except SlackApiError as e:
         print("Error sending message:", e.response["error"])
@@ -45,7 +44,10 @@ def send_slack_message(token, channel, message):
 
 def main():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
-    channel_id = "D06MM0RUE85"  # 본인 Slack ID
+    # 반드시 사용자 ID 형식 사용: "U12345678"
+    slack_user_id = os.getenv("SLACK_USER_ID")
+    if not slack_user_id:
+        raise ValueError("Slack user ID is not set. Please export SLACK_USER_ID.")
 
     menus = get_menu_lists(URL)
     
@@ -64,7 +66,7 @@ def main():
         "*저녁 (1층/2층):*\n" + dinner_clean
     )
 
-    send_slack_message(slack_token, channel_id, message)
+    send_slack_message(slack_token, slack_user_id, message)
 
 if __name__ == "__main__":
     main()
