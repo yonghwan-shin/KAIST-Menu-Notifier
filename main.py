@@ -1,7 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 import os
 import re
 import certifi
