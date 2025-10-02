@@ -1,37 +1,37 @@
-name: Send KAIST Menu Email
+# name: Send KAIST Menu Email
 
-on:
-  schedule:
-    - cron: '0 0 * * 1-5'   # 매일 UTC 자정 (한국은 오전 9시)
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '0 0 * * 1-5'   # 매일 UTC 자정 (한국은 오전 9시)
+#   workflow_dispatch:
 
-jobs:
-  send-email:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run Python script to fetch menu
-        run: |
-          python main.py > menu.txt
+# jobs:
+#   send-email:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.11'
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt
+#       - name: Run Python script to fetch menu
+#         run: |
+#           python main.py > menu.txt
 
-      - name: Send email
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Today's KAIST Menu"
-          to: "scacung@gmail.com"
-          from: "KAIST Menu Bot <${{ secrets.MAIL_USERNAME }}>"
-          body: file://menu.txt
-          secure: true
+#       - name: Send email
+#         uses: dawidd6/action-send-mail@v3
+#         with:
+#           server_address: smtp.gmail.com
+#           server_port: 465
+#           username: ${{ secrets.MAIL_USERNAME }}
+#           password: ${{ secrets.MAIL_PASSWORD }}
+#           subject: "Today's KAIST Menu"
+#           to: "scacung@gmail.com"
+#           from: "KAIST Menu Bot <${{ secrets.MAIL_USERNAME }}>"
+#           body: file://menu.txt
+#           secure: true
